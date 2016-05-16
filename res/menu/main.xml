@@ -1,0 +1,49 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.mochalov.photo.MainActivity" >
+
+    <item
+        android:id="@+id/action_view"
+        android:orderInCategory="101"
+        android:showAsAction="always"
+        android:title="@string/action_view" 
+        android:icon="@drawable/ic_launcher"/>
+    
+
+    <item
+        android:id="@+id/action_list"
+        android:orderInCategory="102"
+        android:showAsAction="always"
+        android:title="@string/action_list" 
+        android:icon="@drawable/ic_launcher"/>
+    
+	
+    <item
+        android:id="@+id/action_camera"
+        android:orderInCategory="102"
+        android:showAsAction="always"
+        android:title="@string/action_camera"/>
+    
+	<item
+        android:id="@+id/item"
+		android:title="menu"
+		android:icon="@drawable/btn1"
+		android:showAsAction="always"
+        android:orderInCategory="999"
+		>
+	<menu>
+		<item
+			android:id="@+id/action_settings"
+			android:title="@string/action_settings"
+			android:showAsAction="always|withText"
+		/>
+    <item
+        android:id="@+id/action_select_camera"
+        android:orderInCategory="103"
+        android:showAsAction="always"
+        android:title="@string/action_select_camera"/>
+	</menu>
+</item>
+    
+    
+</menu>

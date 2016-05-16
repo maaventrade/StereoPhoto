@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+		<PreferenceCategory 
+			android:title="Preferences">
+			<CheckBoxPreference
+				android:key="FLASH_MODE"
+				android:title="Flash mode"
+				android:summary="Turn flash on when shouting"
+				android:defaultValue="false"
+			/>
+			
+		<ListPreference
+                android:title="Speed of shoot"
+                android:summary=""
+                android:key="SPEED"
+                android:defaultValue="Faster"
+                android:entries="@array/listArray"
+                android:entryValues="@array/listValues" />
+		
+		<ListPreference
+                android:title="Size"
+                android:summary=""
+                android:key="PICTURE_SIZE"/>			
+							
+		</PreferenceCategory>
+</PreferenceScreen>
