@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.PorterDuff.Mode;
 import android.util.AttributeSet;
@@ -15,12 +16,16 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+/**
+ * 
+ * @author @Alexey Mochalov
+ * Draw button and progress over the textureView
+ */
 public class SurfaceViewInfo extends SurfaceView implements SurfaceHolder.Callback {
-
 	private DrawThread drawThread;
 	String info1 = "";
 	
-	public TouchEventCallback touchEventCallback;
+	public TouchEventCallback touchEventCallback; // Event: snapshot button clicked
 	
     public SurfaceViewInfo(Context context, AttributeSet attrs) {
 		super(context, attrs);
@@ -33,9 +38,13 @@ public class SurfaceViewInfo extends SurfaceView implements SurfaceHolder.Callba
     }
     
 	interface TouchEventCallback { 
-		void callbackCall(); 
+		void snapShotButtonClicked(); // Event: snapshot button clicked (ACTION_UP) 
 	}
 	
+	/**
+	 * 
+	 * @param progress - percent of the time elapced
+	 */
 	public void setProgress(float progress){
 		drawThread.rectProgress.right = drawThread.rectButtonShot.left+drawThread.rectButtonShot.width() * progress; 
 	}
@@ -50,9 +59,6 @@ public class SurfaceViewInfo extends SurfaceView implements SurfaceHolder.Callba
 		drawThread.rectProgress.right = drawThread.rectButtonShot.left; 
 	}
 
-	/**
-	 * 
-	 */
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
     	drawThread = new DrawThread(getHolder(), this);
@@ -70,7 +76,7 @@ public class SurfaceViewInfo extends SurfaceView implements SurfaceHolder.Callba
                 drawThread.join();
                 retry = false;
             } catch (InterruptedException e) {
-                // try again ang again
+                // try again and again
             }
         }
     }
@@ -88,13 +94,13 @@ public class SurfaceViewInfo extends SurfaceView implements SurfaceHolder.Callba
 			break;
 		case MotionEvent.ACTION_UP:
 			if (drawThread.rectButtonShot.contains(event.getX(), event.getY())){
-				Log.d("", "CALL");
-				touchEventCallback.callbackCall();
+				// Take photos 
+				touchEventCallback.snapShotButtonClicked();
 			}
 			else drawThread.setStateOff();
 			break; 
 		}		
-		return true; //processed
+		return true; 
     }
 
 	public void setButtonDisable() {
@@ -105,14 +111,12 @@ public class SurfaceViewInfo extends SurfaceView implements SurfaceHolder.Callba
 		drawThread.setStateOff();
 	}    	     
 
-	public void setInfo1(String info1) {
+	public void setInfo(String info1) {
 		this.info1 = info1;
 	}    	     
 }
 
 class DrawThread extends Thread{
-	private SurfaceViewInfo surfaceViewInfo;
-	
     private boolean runFlag = false;
     private SurfaceHolder surfaceHolder;
 
@@ -127,7 +131,6 @@ class DrawThread extends Thread{
 	
     public DrawThread(SurfaceHolder surfaceHolder, SurfaceViewInfo surfaceViewInfo){
         this.surfaceHolder = surfaceHolder;
-        this.surfaceViewInfo = surfaceViewInfo;
     }
 
     public void setRunning(boolean run) {
@@ -161,17 +164,80 @@ class DrawThread extends Thread{
                 synchronized (surfaceHolder) {
                 	if (canvas != null){
                         canvas.drawColor(Color.TRANSPARENT, Mode.CLEAR);	
-                        canvas.drawText("Hello World! "+now, 10, 450, textPaint);
-                        canvas.drawText(surfaceViewInfo.info1, 10, 500, textPaint);
+                        //canvas.drawText("Hello World! "+now, 10, 450, textPaint);
+                        //canvas.drawText(surfaceViewInfo.info1, 10, 500, textPaint);
                        
                         if (rectButtonShot != null){
-                    		if (state == states.on)
-                    			paintButton.setColor(Color.RED);
-                    		else if (state == states.off)
-                    			paintButton.setColor(Color.YELLOW);
-                    		else
-                    			paintButton.setColor(Color.GRAY);
-                    		canvas.drawRect(rectButtonShot, paintButton);
+                    		if (state == states.on){
+                    				paintButton.setColor(Color.YELLOW);
+                    			paintButton.setStyle(Paint.Style.FILL_AND_STROKE);
+                        		canvas.drawRect(rectButtonShot, paintButton);
+                    			
+                    			paintButton.setColor(Color.rgb(63, 163, 248));
+                    			paintButton.setStyle(Paint.Style.STROKE);
+                    			paintButton.setStrokeWidth(12);
+                        		canvas.drawRect(rectButtonShot, paintButton);
+                        		
+                    			paintButton.setStyle(Paint.Style.FILL_AND_STROKE);
+                    			paintButton.setStrokeWidth(1);
+                    				paintButton.setColor(Color.rgb(0, 0, 128));
+                    			paintButton.setTextSize(40);
+                    			
+                    			String text = "Click button and rotate camera->";
+                    			Rect bounds = new Rect(); 
+                    			paintButton.getTextBounds(text, 0, text.length(), bounds);
+                    			
+                    			float top = rectButtonShot.top + rectButtonShot.height()/2 + 10;
+                    			float left = rectButtonShot.left+rectButtonShot.width()/2 - bounds.width()/2;
+                    			
+                                canvas.drawText(text, left, top, paintButton);
+                    		} else if (state == states.off){
+                    			paintButton.setColor(Color.argb(200, 135, 206, 235));
+                    			paintButton.setStyle(Paint.Style.FILL_AND_STROKE);
+                        		canvas.drawRect(rectButtonShot, paintButton);
+                    			
+                    			paintButton.setColor(Color.rgb(63, 163, 248));
+                    			paintButton.setStyle(Paint.Style.STROKE);
+                    			paintButton.setStrokeWidth(12);
+                        		canvas.drawRect(rectButtonShot, paintButton);
+                        		
+                    			paintButton.setStyle(Paint.Style.FILL_AND_STROKE);
+                    			paintButton.setStrokeWidth(1);
+                    			paintButton.setColor(Color.WHITE);
+                    			paintButton.setTextSize(40);
+                    			
+                    			String text = "Click button and rotate camera->";
+                    			Rect bounds = new Rect(); 
+                    			paintButton.getTextBounds(text, 0, text.length(), bounds);
+                    			
+                    			float top = rectButtonShot.top + rectButtonShot.height()/2 + 10;
+                    			float left = rectButtonShot.left+rectButtonShot.width()/2 - bounds.width()/2;
+                    			
+                                canvas.drawText(text, left, top, paintButton);
+                    			
+                        	} else {
+                				paintButton.setColor(Color.GRAY);
+                				paintButton.setStyle(Paint.Style.FILL_AND_STROKE);
+                				canvas.drawRect(rectButtonShot, paintButton);
+                			
+                				paintButton.setColor(Color.rgb(63, 163, 248));
+                				paintButton.setStyle(Paint.Style.STROKE);
+                				paintButton.setStrokeWidth(12);
+                				canvas.drawRect(rectButtonShot, paintButton);
+                    		
+                				paintButton.setStyle(Paint.Style.FILL_AND_STROKE);
+                				paintButton.setStrokeWidth(1);
+                				paintButton.setColor(Color.rgb(0, 0, 128));
+                				paintButton.setTextSize(40);
+                			
+                				String text = "Click button and rotate camera->";
+                				Rect bounds = new Rect(); 
+                				paintButton.getTextBounds(text, 0, text.length(), bounds);
+                			
+                				float top = rectButtonShot.top + rectButtonShot.height()/2 + 10;
+                				float left = rectButtonShot.left+rectButtonShot.width()/2 - bounds.width()/2;
+                			
+                        	}	
                         }
                 		if (rectProgress != null){
                             paintProgress.setColor(Color.BLACK);

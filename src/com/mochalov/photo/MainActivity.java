@@ -9,6 +9,7 @@ import android.hardware.*;
 import android.media.*;
 import android.os.*;
 import android.preference.*;
+import android.text.format.DateFormat;
 import android.util.*;
 import android.view.*;
 import android.view.TextureView.*;
@@ -18,47 +19,41 @@ import android.widget.AdapterView.*;
 import java.io.*;
 import java.util.*;
 
+/**
+ * 
+ * @author @Alexey Mochalov
+ * This application makes images from a pairs of photos.
+ * User pushes the button and moves camera horizontally. Application takes two photos and makes stereo image.     
+ *
+ */
 public class MainActivity extends Activity  implements SurfaceTextureListener,
 OnSharedPreferenceChangeListener
 {
-	private static final String TAG = "MainActivity";
-	// Object Camera contains the hardware.Camera object
-	private Camera camera;
-	// The camera uses textureView to show preview
-    private TextureView textureView;
-    // The object surfaceViewInfo shows buttons and information over the textureView 
-    private SurfaceViewInfo surfaceViewInfo;
+	static final String TAG = "MainActivity";
 	
-    // SraredPreferences keep parameters of the application
-	private SharedPreferences prefs;
-	private static final String FLASH_MODE = "FLASH_MODE";
-	private static final String PICTURE_SIZE = "PICTURE_SIZE";
-	// Turn the flash on or not
-	private boolean flashMode = false;
-	// Size of the pictures created by the camera
-	private String pictureSize;
-	// The application changes orientation of the Camera when device is rotated  
-	private OrientationEventListener orientationEventListener;
-	private int orientation = -1;
-	// The directory for saving cameras images
-	private String tempDirectory = Environment.getExternalStorageDirectory()+"/xolosoft/stereo";
-	// The name of the subdirectory is produced from time of the shooting  
-	private String tempSubdir = "";
-	// Capturing of the images is running
-	private enum States {none, shot1, shot2};
-	private States state = States.none;
-	// The timer for the capturing of the second image
-	private CountDownTimer countDownTimer;
+	Camera camera; // Object Camera contains the 'hardware.Camera' object
+    TextureView textureView; // Camera uses textureView to show preview
+    SurfaceViewInfo surfaceViewInfo; // Object surfaceViewInfo shows buttons and information over the textureView
 	
-	private Context context;
+    // SraredPreferences keeps parameters of the application
+	SharedPreferences prefs;
+	static final String FLASH_MODE = "FLASH_MODE";
+	static final String PICTURE_SIZE = "PICTURE_SIZE";
+	boolean flashMode = false; // Turn the flash on or not
 	
-	private SensorManager SensorManager;
-	private final double calibration = SensorManager.STANDARD_GRAVITY;
-	float currentAcceleration1 = 0;
+	String pictureSize; // Size of the pictures created by the camera
+	OrientationEventListener orientationEventListener; // The application changes orientation of the Camera when device is rotated
+	int orientation = -1;
 	
-
-	private ArrayList<String> list = new ArrayList<String>(); 
-//	private ArrayList<String> list1 = new ArrayList<String>(); 
+	String tempDirectory = Environment.getExternalStorageDirectory()+"/xolosoft/stereo"; // Directory for saving cameras images	  
+	String tempSubdir = ""; // The name of the subdirectory is made from time of the shooting like '2016-05-25 02:35:02'
+	
+	enum States {none, shot1, shot2}; // Capturing of the images is running
+	States state = States.none;
+	
+	CountDownTimer countDownTimer; // The timer for the capturing of the second image
+	
+	Context context;
 	
 	MenuItem menuItemView = null;
 	
@@ -73,16 +68,15 @@ OnSharedPreferenceChangeListener
 		flashMode = prefs.getBoolean(FLASH_MODE, false);	
 		pictureSize = prefs.getString(PICTURE_SIZE, "");
 		
-		setViewCamera();
-		
 		context = this;
+
+		setViewCamera();
 	}
 
 	/**
 	 * Set contentView, store main visual objects and set main events handlers   
 	 */
-	private void setViewCamera(){
-		
+	void setViewCamera(){
 		setContentView(R.layout.activity_main);
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
 							 WindowManager.LayoutParams.FLAG_FULLSCREEN);					 
@@ -127,16 +121,16 @@ OnSharedPreferenceChangeListener
 		 */
 		surfaceViewInfo.touchEventCallback = new SurfaceViewInfo.TouchEventCallback() {
 			@Override
-			public void callbackCall() {
+			public void snapShotButtonClicked() {
 				if (state == States.none){
 					state = States.shot1;
 					File dir = new File(tempDirectory);
 					if (!dir.exists())
 						dir.mkdirs();
 
-					android.text.format.DateFormat df = new android.text.format.DateFormat();
-					tempSubdir = df.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()).toString();
-
+					//android.text.format.DateFormat df = new android.text.format.DateFormat();
+					tempSubdir = DateFormat.format("yyyy-MM-dd hh:mm:ss", new java.util.Date()).toString();
+					// Create directory for two photos 
 					dir = new File(tempDirectory+"/"+tempSubdir);
 					if (!dir.exists())
 						dir.mkdirs();
@@ -181,39 +175,41 @@ OnSharedPreferenceChangeListener
 			startActivity(intent);
 			break;
 		case R.id.action_view:
-			showImages(tempDirectory, tempSubdir);
+			showImages();
 			return true;
 		case R.id.action_list:
 			dialogListDir();
 			return true;
-		case R.id.action_camera:
+		//case R.id.action_camera:
 		//	setViewCamera();
-			return true;
-		case R.id.action_select_camera:
+		//	return true;
+		//case R.id.action_select_camera:
 		//	camera.open(true);
-			return true;
+		//	return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
 
 	/**
-	/ Open dialog for selection subdirectory
-	/ with images to show.
+	* Open dialog for the selection subdirectory
+	* with images to show.
 	**/
-    private void dialogListDir(){
+    void dialogListDir(){
 		final DialogListDir dialog = new DialogListDir(this, tempDirectory);
 		dialog.listView.setOnItemClickListener(new OnItemClickListener(){
 				@Override
 				public void onItemClick(AdapterView<?> parent, View view,
 										int position, long id) {
 					tempSubdir= dialog.getPath(position);
-					//dialog.dismiss();
-					showImages(tempDirectory, tempSubdir);
+					showImages();
 				}});
 		dialog.show();
     }
 	
-	private void showImages(String tempDirectory, String tempSubdir){
+    /**
+     * Show the list of the images
+     */
+	void showImages(){
 		Intent intent;
 		intent = new Intent(this, PicturesActivity.class);
 		intent.putExtra("tempDirectory", tempDirectory);
@@ -225,11 +221,12 @@ OnSharedPreferenceChangeListener
 	@Override
 	public void onSurfaceTextureAvailable(SurfaceTexture surface, int width,
 			int height) {
-		
+		// Create Camera object
 		camera = new Camera(this);
 		camera.takePhotoCallback = new Camera.TakePhotoCallback(){
 			@Override
 			public void callbackCall() {
+				// The first photo was taken. Pause to make second photo
 				surfaceViewInfo.setProgress(0);
 				startCountDown();
 			}
@@ -238,7 +235,7 @@ OnSharedPreferenceChangeListener
 		camera.open();
 		
 		camera.setPictureSize(pictureSize);
-		surfaceViewInfo.setInfo1(pictureSize);
+		surfaceViewInfo.setInfo(pictureSize);
 
 		camera.setPreview(width, height);
 		camera.startPreview(surface);
@@ -251,14 +248,12 @@ OnSharedPreferenceChangeListener
 
 	@Override
 	public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-		Log.d("", "onSurfaceTextureDestroyed");
 		camera.release();
         return true;
 	}
 
 	@Override
 	protected void onPause() {
-		Log.d("", "PAUSE");
 		super.onPause();
 		
 		Editor editor = prefs.edit();
@@ -285,42 +280,37 @@ OnSharedPreferenceChangeListener
 		else if (prefName.equals(PICTURE_SIZE)){
 			pictureSize = prefs.getString(PICTURE_SIZE, "");
 			camera.setPictureSize(pictureSize);
-			surfaceViewInfo.setInfo1(pictureSize);
+			surfaceViewInfo.setInfo(pictureSize);
 		}
 	}
 	
-	public boolean setOrientation(int orientation, int info){
+	boolean setOrientation(int orientation, int info){
 		if (camera == null) return false;
 		camera.setRotation(orientation);
 		return true;
 	}
 	
-	private void startCountDown(){
-		
-		//list = new ArrayList<String>(); 
-		//list1 = new ArrayList<String>(); 
-		
+	/**
+	 * Pause to make second photo 
+	 */
+	void startCountDown(){
 		countDownTimer = new CountDownTimer(500, 20) {
 		public void onTick(long diff) {
 			surfaceViewInfo.setProgress((500-diff)/500f);
-//			list.add(""+camera.currentAcceleration);
 		}
 			
 		public void onFinish() { 
 				//final ToneGenerator tg = 
 				//	new ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100); 
 				//tg.startTone(ToneGenerator.TONE_PROP_BEEP);
-
 			camera.focus(2);
 			
-			//camera.takePicture(2);
+			// Take photo 
 			camera.prepare();
 
 			state = States.none;
-			/*
 			surfaceViewInfo.setButtonEnable();
 			surfaceViewInfo.setProgress(0);
-			Log.d("", "SET ENABLE");
 			
 			String path = tempDirectory+"/"+tempSubdir+"/1.jpg";
 			
@@ -334,7 +324,6 @@ OnSharedPreferenceChangeListener
 					context.getResources(),
 					ThumbImage));
 			menuItemView.setVisible(true);
-			*/
 			
 		} 
 		};
