@@ -61,7 +61,9 @@ OnSharedPreferenceChangeListener
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
-
+		ActionBar ab = getActionBar();
+		ab.setDisplayShowTitleEnabled(false);
+		
 		// Restore preferences
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		prefs.registerOnSharedPreferenceChangeListener(this);
@@ -207,15 +209,17 @@ OnSharedPreferenceChangeListener
     }
 	
     /**
-     * Show the list of the images
+     * Show images from the selected subdirectoty
      */
 	void showImages(){
+		
 		Intent intent;
 		intent = new Intent(this, PicturesActivity.class);
 		intent.putExtra("tempDirectory", tempDirectory);
 		intent.putExtra("tempSubdir", tempSubdir);
 
 		startActivity(intent);
+		
 	}
 	
 	@Override

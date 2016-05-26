@@ -38,12 +38,15 @@ public class ViewPictures extends View{
 	private int index1 = 1;
 	private int index2 = 2;
 	
-	float scale = 1;
+	double scale = 1; // Coeffitient of zoominh
 	
 	private boolean abIsVisible;
 	
 	TapCallback tapCallback;
-
+	
+	/*
+	* Swaps left and right images
+	*/
 	public void swop()
 	{
 		index = index1;
@@ -201,7 +204,7 @@ public class ViewPictures extends View{
 	// Remember some things for zooming
 	PointF start = new PointF();
 	PointF mid = new PointF();
-	float oldDist = 1f;
+	double oldDist = 1f;
 	String savedItemClicked;
 	
 	@Override
@@ -243,7 +246,7 @@ public class ViewPictures extends View{
 	            matrix.postTranslate(event.getX() - start.x, event.getY()
 	                    - start.y);
 	        } else if (mode == ZOOM) {
-	            float newDist = spacing(event);
+	            double newDist = spacing(event);
 	            Log.d(TAG, "newDist=" + newDist);
 	            if (newDist > 10f) {
 	               // matrix.set(savedMatrix);
@@ -274,10 +277,10 @@ public class ViewPictures extends View{
 	}
 
 	/** Determine the space between the first two fingers */
-	private float spacing(MotionEvent event) {
+	private double spacing(MotionEvent event) {
 	    float x = event.getX(0) - event.getX(1);
 	    float y = event.getY(0) - event.getY(1);
-	    return FloatMath.sqrt(x * x + y * y);
+		return Math.sqrt(x * x + y * y);
 	}
 
 	/** Calculate the mid point of the first two fingers */

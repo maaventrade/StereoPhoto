@@ -19,7 +19,7 @@
 	
 	<style name="Widget.ActionBar.Transparent"> 
 		<!--<item name="android:background">@android:color/transparent-->
-		<item name="android:background">@color/bronze</item> 
+		<item name="android:background">@color/gray</item> 
 	</style>
 
 	
