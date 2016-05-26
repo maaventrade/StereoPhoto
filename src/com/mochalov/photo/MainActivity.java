@@ -39,6 +39,7 @@ OnSharedPreferenceChangeListener
 	SharedPreferences prefs;
 	static final String FLASH_MODE = "FLASH_MODE";
 	static final String PICTURE_SIZE = "PICTURE_SIZE";
+	static final String PICTURE_PATH = "PICTURE_PATH";
 	boolean flashMode = false; // Turn the flash on or not
 	
 	String pictureSize; // Size of the pictures created by the camera
@@ -46,7 +47,7 @@ OnSharedPreferenceChangeListener
 	int orientation = -1;
 	
 	String tempDirectory = Environment.getExternalStorageDirectory()+"/xolosoft/stereo"; // Directory for saving cameras images	  
-	String tempSubdir = ""; // The name of the subdirectory is made from time of the shooting like '2016-05-25 02:35:02'
+	String tempSubdir = null; // The name of the subdirectory is made from time of the shooting like '2016-05-25 02:35:02'
 	
 	enum States {none, shot1, shot2}; // Capturing of the images is running
 	States state = States.none;
@@ -60,6 +61,9 @@ OnSharedPreferenceChangeListener
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		context = this;
+		
 		getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
 		ActionBar ab = getActionBar();
 		ab.setDisplayShowTitleEnabled(false);
@@ -70,8 +74,8 @@ OnSharedPreferenceChangeListener
 		flashMode = prefs.getBoolean(FLASH_MODE, false);	
 		pictureSize = prefs.getString(PICTURE_SIZE, "");
 		
-		context = this;
-
+		tempSubdir = prefs.getString(PICTURE_PATH, null);
+		
 		setViewCamera();
 	}
 
@@ -153,7 +157,9 @@ OnSharedPreferenceChangeListener
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 		menuItemView = menu.findItem(R.id.action_view);
-		menuItemView.setVisible(false);
+		if (tempSubdir != null)
+			loadMenuItemViewIcon(tempDirectory+"/"+tempSubdir+"/1.jpg");
+		
 		return true;
 	}
 
@@ -212,13 +218,16 @@ OnSharedPreferenceChangeListener
      * Show images from the selected subdirectoty
      */
 	void showImages(){
-		
+		DialogPictures dlg = new DialogPictures(context, tempDirectory+"/"+tempSubdir);
+		dlg.show();
+		/*
 		Intent intent;
 		intent = new Intent(this, PicturesActivity.class);
 		intent.putExtra("tempDirectory", tempDirectory);
 		intent.putExtra("tempSubdir", tempSubdir);
 
 		startActivity(intent);
+		*/
 		
 	}
 	
@@ -263,6 +272,7 @@ OnSharedPreferenceChangeListener
 		Editor editor = prefs.edit();
 		editor.putBoolean(FLASH_MODE, flashMode);
 		editor.putString(PICTURE_SIZE, pictureSize);
+		editor.putString(PICTURE_PATH, tempSubdir);
 		
 		editor.apply();
 	}
@@ -316,22 +326,23 @@ OnSharedPreferenceChangeListener
 			surfaceViewInfo.setButtonEnable();
 			surfaceViewInfo.setProgress(0);
 			
-			String path = tempDirectory+"/"+tempSubdir+"/1.jpg";
-			
-			Bitmap ThumbImage = 
-				ThumbnailUtils.extractThumbnail(
-					BitmapFactory.decodeFile(path), 
-					64, 64);
-				
-			menuItemView.setIcon(
-				new BitmapDrawable(
-					context.getResources(),
-					ThumbImage));
-			menuItemView.setVisible(true);
+			loadMenuItemViewIcon(tempDirectory+"/"+tempSubdir+"/1.jpg");
 			
 		} 
 		};
 		countDownTimer.start();	
+	}
+
+	protected void loadMenuItemViewIcon(String path) {
+		Bitmap ThumbImage = 
+			ThumbnailUtils.extractThumbnail(
+				BitmapFactory.decodeFile(path), 
+				64, 64);
+			
+		menuItemView.setIcon(
+			new BitmapDrawable(
+				context.getResources(),
+				ThumbImage));
 	}
 	
 }

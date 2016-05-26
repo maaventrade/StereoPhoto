@@ -7,7 +7,7 @@
         android:orderInCategory="101"
         android:showAsAction="always"
         android:title="@string/action_view" 
-        android:icon="@drawable/ic_launcher"/>
+        android:icon="@drawable/btn2"/>
     
 
     <item

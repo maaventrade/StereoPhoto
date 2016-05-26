@@ -17,29 +17,32 @@ public class DialogPictures extends Dialog
 	private static final String TEMPDIR = "TEMPDIR";
 
 	private ViewPictures viewPictures;
-	ActionBar ab;
+	//ActionBar ab;
 
 	private String tempDirectory = "";
 	private String tempSubdir = "";
 	
 	public DialogPictures(Context context, String tempDirectory) {
-		super(context,android.R.style.Theme_Holo_Light_NoActionBar_Fullscreen
-				  );
-			this.context = context;
-		ab = getActionBar();
-    	ab.hide();
+		super(context);
+		
+		//getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT,
+        //        WindowManager.LayoutParams.MATCH_PARENT);
+		
+		this.context = context;
+		//ab = getActionBar();
+    	//ab.hide();
 
         setContentView(R.layout.view);
 
         viewPictures = (ViewPictures)findViewById(R.id.view);
-        viewPictures.setAbIsVisible(ab.isShowing());
+        //viewPictures.setAbIsVisible(ab.isShowing());
 
         viewPictures.tapCallback = new ViewPictures.TapCallback() {
 			@Override
 			public void callbackCall() {
-				if (ab.isShowing()) ab.hide();
-				else ab.show();
-				viewPictures.setAbIsVisible(ab.isShowing());
+			//	if (ab.isShowing()) ab.hide();
+			//	else ab.show();
+			//	viewPictures.setAbIsVisible(ab.isShowing());
 			}
 		};
 

@@ -34,11 +34,10 @@ public final class R {
     public static final class drawable {
         public static final int actionbar_background=0x7f020000;
         public static final int btn1=0x7f020001;
-        public static final int btn3=0x7f020002;
+        public static final int btn2=0x7f020002;
         public static final int ic_launcher=0x7f020003;
-        public static final int mono=0x7f020004;
-        public static final int not_found=0x7f020005;
-        public static final int stereo=0x7f020006;
+        public static final int not_found=0x7f020004;
+        public static final int stereo=0x7f020005;
     }
     public static final class id {
         public static final int LinearLayout1=0x7f0b0002;
@@ -115,6 +114,7 @@ public final class R {
 		    <item name="android:windowActionBarOverlay">true</item>
 	</style>
 	
+   <item name="android:logo">@android:color/transparent</item>
          */
         public static final int Widget_ActionBar=0x7f090001;
         public static final int Widget_ActionBar_Transparent=0x7f090002;
