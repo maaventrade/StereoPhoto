@@ -79,7 +79,7 @@ public class PicturesActivity extends Activity{
     
 	/**
 	/* When Activity starts it checks is tempSubdir defined.
-	/* If is not degined then opens the Dialiog for selecting the tempSubdir
+	/* If is not defined then opens the Dialog for selecting the tempSubdir
 	**/
     @Override
     protected void onStart() {
