@@ -81,6 +81,8 @@ public class ViewPictures extends View{
 	}
 
 	private void loadFileNames(){
+		Log.d("", "tempSubdir "+tempSubdir);
+		
 		if (tempSubdir.equals("")) return;
 
 		image1 = load(1, src1, dst1, 0);
@@ -99,6 +101,7 @@ public class ViewPictures extends View{
 		setMeasuredDimension(widthMeasureSpec, heightMeasureSpec);
 		height = getHeight();
 		width = getWidth();
+		
 		imageWidth = width/2 - 2;
 		if (imageWidth > 0){
 			loadFileNames();
@@ -245,6 +248,7 @@ public class ViewPictures extends View{
 	            matrix.set(savedMatrix);
 	            matrix.postTranslate(event.getX() - start.x, event.getY()
 	                    - start.y);
+				invalidate();
 	        } else if (mode == ZOOM) {
 	            double newDist = spacing(event);
 	            Log.d(TAG, "newDist=" + newDist);
@@ -272,7 +276,7 @@ public class ViewPictures extends View{
 	    }
 	
 
-	  //  this.setImageMatriex(matrix);
+	    this.setImageMatriex(matrix);
 	    return true;
 	}
 

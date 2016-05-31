@@ -218,17 +218,15 @@ OnSharedPreferenceChangeListener
      * Show images from the selected subdirectoty
      */
 	void showImages(){
-		DialogPictures dlg = new DialogPictures(context, tempDirectory+"/"+tempSubdir);
-		dlg.show();
-		/*
+		//DialogPictures dlg = new DialogPictures(context, tempDirectory , tempSubdir);
+		//dlg.show();
+		
 		Intent intent;
 		intent = new Intent(this, PicturesActivity.class);
 		intent.putExtra("tempDirectory", tempDirectory);
 		intent.putExtra("tempSubdir", tempSubdir);
-
+	
 		startActivity(intent);
-		*/
-		
 	}
 	
 	@Override
