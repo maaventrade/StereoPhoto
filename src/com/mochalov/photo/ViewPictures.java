@@ -2,43 +2,48 @@ package com.mochalov.photo;
 
 import android.content.*;
 import android.graphics.*;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.*;
 import android.os.*;
 import android.util.*;
 import android.view.*;
 import android.widget.*;
+
 import java.io.*;
 import java.util.*;
 
-public class ViewPictures extends View{
+public class ViewPictures extends ImageView{
+	//public boolean onTouchEvent(MotionEvent event)
+	// These matrices will be used to move and zoom image
+	Matrix matrix = new Matrix();
+	Matrix savedMatrix = new Matrix();
+
+	// We can be in one of these 3 states
+	static final int NONE = 0;
+	static final int DRAG = 1;
+	static final int ZOOM = 2;
+	int mode = NONE;
+
+	// Remember some things for zooming
+	PointF start = new PointF();
+	PointF mid = new PointF();
+	float oldDist = 1f;
+	String savedItemClicked;
+	
+	
 	private static final String TAG = "myView";
-	private Context context;
 	private Paint paint = new Paint();
 	
 	private int height;
 	private int width;
-	private int imageWidth;
-	
-	private Bitmap image1 = null;
-	private Bitmap image2 = null;
-	private Rect src1 = new Rect();
-
-	private Rect dst12 = new Rect();
-	private Rect dst22 = new Rect();
-	
-	private Rect dst1 = new Rect();
-	private Rect dst2 = new Rect();
 	
 	private String tempDirectory;
 	private String tempSubdir;
 	
-	private float x0;
-	private float y0;
-	
 	private int index1 = 1;
 	private int index2 = 2;
 	
-	double scale = 1; // Coeffitient of zoominh
+	float scale = 1; // Coefficient of the zooming
 	
 	private boolean abIsVisible;
 	
@@ -49,23 +54,15 @@ public class ViewPictures extends View{
 	*/
 	public void swop()
 	{
+		int index;
 		index = index1;
 		index1 = index2;
 		index2 = index;
 		//Toast.makeText(context, src1.height()
 		
-		image1 = load(index1, src1, dst1, 0);
-		image2 = load(index2, src1, dst2, imageWidth+2);
+		//image1 = load(index1, src1, dst1, 0);
+		//image2 = load(index2, src1, dst2, imageWidth+2);
 		invalidate();
-	}
-	
-	private Bitmap load(int i, Rect src, Rect dst, int dx){
-		Bitmap img = loadImage(i);
-		src.set(new Rect(0, 0, img.getWidth()-1, img.getHeight()-1));
-		float k = (float)img.getWidth()/img.getHeight();
-		dst.set(new Rect(dx, 0, imageWidth+dx, (int)(imageWidth/k)));
-		
-		return img;
 	}
 	
 	interface TapCallback { 
@@ -80,19 +77,44 @@ public class ViewPictures extends View{
 		super(context, attrs);
 	}
 
-	private void loadFileNames(){
+	private void loadImages(){
 		Log.d("", "tempSubdir "+tempSubdir);
 		
 		if (tempSubdir.equals("")) return;
 
-		image1 = load(1, src1, dst1, 0);
-		image2 = load(2, src1, dst2, imageWidth+2);
+		Bitmap bitmap1 = loadImage(1);
+		Bitmap bitmap2 = loadImage(2);
 		
-		dst12 = new Rect(dst1);
-		dst22 = new Rect(dst2);
+		//Create a new image bitmap and attach a brand new canvas to it
+		Bitmap tempBitmap = Bitmap.createBitmap(bitmap1.getWidth() + bitmap2.getWidth(), bitmap1.getHeight(), Bitmap.Config.RGB_565);
+		Canvas tempCanvas = new Canvas(tempBitmap);
+
+		//Draw the image bitmap into the canvas
+		tempCanvas.drawBitmap(bitmap1, 0, 0, null);
+		tempCanvas.drawBitmap(bitmap2, bitmap1.getWidth(), 0, null);
+
+		//Attach the canvas to the ImageView
+		setImageDrawable(new BitmapDrawable(getResources(), tempBitmap));
+		
+        setScaleType(ImageView.ScaleType.MATRIX);
+        float scale;
+        int dx;
+        int dy;
+        if (height > width){
+        	scale = (float)width/getDrawable().getIntrinsicWidth();
+        	dx = 0;
+        	dy = (height - getDrawable().getIntrinsicHeight())/2;
+        } else {
+        	scale = (float)height/getDrawable().getIntrinsicHeight();
+        	dy = 0;
+        	dx = (width - getDrawable().getIntrinsicWidth())/2;
+        }
+       	matrix.postScale(scale, scale);
+        matrix.postTranslate(dx, dy);
 		
 		paint.setTextSize(34);
 		paint.setColor(Color.YELLOW);
+		
 	}
 	
 	@Override
@@ -102,14 +124,18 @@ public class ViewPictures extends View{
 		height = getHeight();
 		width = getWidth();
 		
-		imageWidth = width/2 - 2;
-		if (imageWidth > 0){
-			loadFileNames();
+		if (width > 0){
+			loadImages();
 			invalidate();
 		}
 	}
 	
-	@SuppressWarnings("deprecation")
+	/**
+	 * 
+	 * @param fileIndex - index of image file in subdirectory
+	 * @return loaded file bitmap
+	 * 
+	 */
 	private Bitmap loadImage(int fileIndex){
 		BitmapFactory.Options options = new BitmapFactory.Options();
 		/*options.inJustDecodeBounds = false;
@@ -169,13 +195,13 @@ public class ViewPictures extends View{
 	public void reSetDir(String tempDirectory, String  tempSubdir){
 		this.tempDirectory = tempDirectory;
 		this.tempSubdir = tempSubdir;
-		loadFileNames();
+		loadImages();
 		invalidate();
 	}
 	
 	
 	public void init(Context context){
-		this.context = context;
+		//this.context = context;
 	}
 	
 	public int getIndex1(){
@@ -186,36 +212,13 @@ public class ViewPictures extends View{
 		return index2;
 	}
 	
-	private Rect rectMove;
-	private int x1;
-	private int y1;
-	private float x2;
-	private float y2;
-	private int index;
-	
-	//public boolean onTouchEvent(MotionEvent event)
-	// These matrices will be used to move and zoom image
-	Matrix matrix = new Matrix();
-	Matrix savedMatrix = new Matrix();
-
-	// We can be in one of these 3 states
-	static final int NONE = 0;
-	static final int DRAG = 1;
-	static final int ZOOM = 2;
-	int mode = NONE;
-
-	// Remember some things for zooming
-	PointF start = new PointF();
-	PointF mid = new PointF();
-	double oldDist = 1f;
-	String savedItemClicked;
-	
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 	    // TODO Auto-generated method stub
 
-	    //ImageView view = (ImageView) v;
-	  //  dumpEvent(event);
+        setScaleType(ImageView.ScaleType.MATRIX);
+        float scale;
+
 	    // Handle touch events here...
 	    switch (event.getAction() & MotionEvent.ACTION_MASK) {
 	    case MotionEvent.ACTION_DOWN:
@@ -237,54 +240,45 @@ public class ViewPictures extends View{
 	    case MotionEvent.ACTION_UP:
 	    case MotionEvent.ACTION_POINTER_UP:
 	        mode = NONE;
-	        Log.d(TAG, "mode=NONE");
+            savedMatrix.set(matrix);
 	        break;
 	    case MotionEvent.ACTION_MOVE:
-	        if (mode == DRAG) {
-	        	
-	        	//dst12
-	        	
-	            // ...
+			if (event.getPointerCount() < 2){
 	            matrix.set(savedMatrix);
 	            matrix.postTranslate(event.getX() - start.x, event.getY()
 	                    - start.y);
-				invalidate();
 	        } else if (mode == ZOOM) {
-	            double newDist = spacing(event);
-	            Log.d(TAG, "newDist=" + newDist);
+	        	// pinch zooming
+	            float newDist = spacing(event);
 	            if (newDist > 10f) {
-	               // matrix.set(savedMatrix);
-	                scale = scale + (newDist / oldDist)/10;
-					
-					dst12.right = (int)(dst1.right * scale); 
-					dst12.bottom = (int)(dst1.bottom * scale); 
-
-					dst22.right = (int)(dst2.right * scale); 
-					dst22.bottom = (int)(dst2.bottom * scale); 
-					
-//					src2.right = (int)(src2.right * scale); 
-//					src2.bottom = (int)(src2.bottom * scale); 
-					
-//					Log.d(TAG,"scale "+scale+"  "+src2.left+"  "+src2.right);
-					
-					
-					invalidate();
-	               // matrix.postScale(scale, scale, mid.x, mid.y);
+	                matrix.set(savedMatrix);
+	                scale = newDist / oldDist; // setting the scaling of the
+                    // matrix...if scale > 1 means
+                    // zoom in...if scale < 1 means
+                    // zoom out
+	                matrix.postScale(scale, scale, mid.x, mid.y);
+		            matrix.postTranslate(event.getX() - start.x, event.getY()
+		                    - start.y);
+	            } else {
+	                matrix.set(savedMatrix);
+		            matrix.postTranslate(event.getX() - start.x, event.getY()
+		                    - start.y);
 	            }
+	            
 	        }
 	        break;
 	    }
 	
-
-	    this.setImageMatriex(matrix);
+	    setImageMatrix(matrix);
+//	    invalidate();
 	    return true;
 	}
 
 	/** Determine the space between the first two fingers */
-	private double spacing(MotionEvent event) {
+	private float spacing(MotionEvent event) {
 	    float x = event.getX(0) - event.getX(1);
 	    float y = event.getY(0) - event.getY(1);
-		return Math.sqrt(x * x + y * y);
+		return FloatMath.sqrt(x * x + y * y);
 	}
 
 	/** Calculate the mid point of the first two fingers */
@@ -294,61 +288,13 @@ public class ViewPictures extends View{
 	    point.set(x / 2, y / 2);
 	}
 
-
-	@Override
-	protected void onDraw(Canvas canvas){
-		ExifInterface exif1 = null;
-		ExifInterface exif2 = null;
-		try
-		{
-			exif1 = new ExifInterface(tempDirectory+"/"+tempSubdir + "/" + index1+".jpg");
-			exif2 = new ExifInterface(tempDirectory+"/"+tempSubdir + "/" + index2+".jpg");
-		}
-		catch (IOException e)
-		{
-			Log.d(TAG,"ERROR "+e);
-		}
-		
-		
-		if (image1 != null){
-			canvas.drawBitmap(image1, src1, dst12, paint);
-		}
-		if (image2 != null){
-			canvas.drawBitmap(image2, src1, dst22, paint);
-		}
-		/*
-		if (abIsVisible){
-			canvas.drawText(tempSubdir+"/"+index1, dst1.left, Math.min(dst1.bottom, getHeight()), paint);
-			canvas.drawText(tempSubdir+"/"+index2, dst2.left, Math.min(dst2.bottom, getHeight()), paint);
-		} else {
-			canvas.drawText(""+index1, dst1.left, Math.min(dst1.bottom, getHeight()), paint);
-			canvas.drawText(""+index2, dst2.left, Math.min(dst2.bottom, getHeight()), paint);
-		}
-		*/
-		
-		/*
-		paint.setColor(Color.BLUE);
-		canvas.drawRect(new RectF(0,0,dst2.right,300), paint);
-		paint.setColor(Color.YELLOW);
-		canvas.drawText("aperture "+exif1.getAttribute(ExifInterface.TAG_APERTURE),dst1.left,20,paint);
-		canvas.drawText("datetime "+exif1.getAttribute(ExifInterface.TAG_DATETIME),dst1.left,50,paint);
-		canvas.drawText("exposure "+exif1.getAttribute(ExifInterface.TAG_EXPOSURE_TIME),dst1.left,80,paint);
-		canvas.drawText("focal "+exif1.getAttribute(ExifInterface.TAG_FOCAL_LENGTH),dst1.left,110,paint);
-		
-		canvas.drawText("aperture "+exif2.getAttribute(ExifInterface.TAG_APERTURE),dst2.left,20,paint);
-		canvas.drawText("datetime "+exif2.getAttribute(ExifInterface.TAG_DATETIME),dst2.left,50,paint);
-		canvas.drawText("exposure "+exif2.getAttribute(ExifInterface.TAG_EXPOSURE_TIME),dst2.left,80,paint);
-		canvas.drawText("focal "+exif2.getAttribute(ExifInterface.TAG_FOCAL_LENGTH),dst2.left,110,paint);
-		
-		*/
-	}
-	
 	public void setAbIsVisible(boolean visability){
 		abIsVisible = visability;
 		invalidate();
 	}
 
 	public void makeJpeg() {
+		/*
 		int width = src1.width();
 		int height = src1.height();
 		Bitmap bmp = Bitmap.createBitmap(width*2, height, Bitmap.Config.ARGB_8888);
@@ -374,7 +320,7 @@ public class ViewPictures extends View{
 		} catch (Exception e) {
 			Toast.makeText(context, "Error saving file. "+e.toString(), Toast.LENGTH_LONG).show();
 		}		
-		
+*/		
 	}
 	
 	
